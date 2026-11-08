@@ -1,5 +1,5 @@
 """Draws Figures 2-5 at 300 dpi from the outputs of analysis.py.
-Run after analysis.py:  python figures.py  -> figures/*.png, *.pdf"""
+Run from the repository root after analysis.py:  python code/figures.py  -> figures/*.png, *.pdf"""
 import os, json
 import numpy as np
 import matplotlib
@@ -17,11 +17,11 @@ plt.rcParams.update({"font.family": "serif", "font.serif": ["Cambria", "Times Ne
                      "axes.axisbelow": True, "legend.frameon": False, "savefig.dpi": DPI,
                      "mathtext.fontset": "stix"})
 SIZE = (6.8, 2.75)
-os.makedirs("figures", exist_ok=True)
+os.makedirs(core.FIGURES, exist_ok=True)
 X, y, _ = core.load()
-R = json.load(open("results.json"))
-s, e, sw, ew = np.load("scores.npy")
-mc = np.load("mc_spearman.npy")
+R = json.load(open(os.path.join(core.RESULTS, "results.json")))
+s, e, sw, ew = np.load(os.path.join(core.RESULTS, "scores.npy"))
+mc = np.load(os.path.join(core.RESULTS, "mc_spearman.npy"))
 Ks = np.unique(np.round(np.logspace(1, 3, 60)).astype(int))
 thou = FuncFormatter(lambda v, _: f"{int(v):,}")
 
@@ -33,7 +33,7 @@ def panel(ax, letter):
 def save(fig, name):
     fig.tight_layout(w_pad=2.5)
     for ext in ("png", "pdf"):
-        fig.savefig(f"figures/{name}.{ext}", dpi=DPI, metadata={"Author": None, "Creator": None} if ext == "pdf" else None)
+        fig.savefig(os.path.join(core.FIGURES, f"{name}.{ext}"), dpi=DPI, metadata={"Author": None, "Creator": None} if ext == "pdf" else None)
     plt.close(fig)
 
 

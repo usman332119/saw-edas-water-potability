@@ -1,7 +1,8 @@
 """Reproduces every number reported in the manuscript (Tables 2-8, Monte Carlo,
-noise and criterion-direction checks). Run:  python analysis.py
-Outputs: results.json and printed tables."""
+noise and criterion-direction checks). Run from the repository root:  python code/analysis.py
+Outputs: results/results.json (+ intermediate .npy files used by figures.py)."""
 import json
+import os
 import numpy as np
 from scipy import stats
 from sklearn.metrics import roc_auc_score
@@ -18,7 +19,9 @@ def agreement(s, e):
                 pearson=stats.pearsonr(s, e)[0])
 
 
-def main(path="water_potability.csv"):
+def main(path=core.DATA):
+    os.makedirs(core.RESULTS, exist_ok=True)
+    res = lambda f: os.path.join(core.RESULTS, f)
     X, y, df = core.load(path)
     out = {"raw_weight_sum": float(RAW_W.sum()), "weights": W.round(4).tolist()}
     out["missing"] = df[core.CRITERIA].isna().sum().to_dict()
@@ -46,7 +49,7 @@ def main(path="water_potability.csv"):
                    for w in rng.dirichlet(np.ones(9), 1000)])
     out["mc"] = dict(mean=mc.mean(), sd=mc.std(ddof=1), min=mc.min(), max=mc.max(),
                      share_above_expert=float((mc > out["base"]["spearman"]).mean()))
-    np.save("mc_spearman.npy", mc)
+    np.save(res("mc_spearman.npy"), mc)
     # multiplicative noise
     rng = np.random.default_rng(SEED)
     out["noise"] = {}
@@ -60,7 +63,7 @@ def main(path="water_potability.csv"):
     Xw = X.copy(); Xw[:, 0] = np.abs(X[:, 0] - 7.5)
     benw = np.array([False, True] + [False] * 7)
     sw, ew = core.saw(Xw, W, benw, minmax=True), core.edas(Xw, W, benw)
-    np.save("scores.npy", np.vstack([s, e, sw, ew]))
+    np.save(res("scores.npy"), np.vstack([s, e, sw, ew]))
     phbad = lambda idx: int(((X[idx, 0] < 6.5) | (X[idx, 0] > 8.5)).sum())
     t = lambda a, k: np.argsort(-a, kind="stable")[:k]
     out["direction"] = {
@@ -76,7 +79,7 @@ def main(path="water_potability.csv"):
         "single_criterion_auc": [roc_auc_score(y, X[:, j]) for j in range(9)],
     }
     conv = lambda o: {k: conv(v) for k, v in o.items()} if isinstance(o, dict) else [conv(v) for v in o] if isinstance(o, list) else (float(o) if isinstance(o, (np.floating, np.integer)) else o)
-    json.dump(conv(out), open("results.json", "w"), indent=1)
+    json.dump(conv(out), open(res("results.json"), "w"), indent=1)
     print(json.dumps(conv(out), indent=1))
 
 

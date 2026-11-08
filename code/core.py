@@ -1,4 +1,5 @@
 """SAW and EDAS core routines for the water potability ranking study."""
+import os
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -7,7 +8,13 @@ CRITERIA = ["ph", "Hardness", "Solids", "Chloramines", "Sulfate",
             "Conductivity", "Organic_carbon", "Trihalomethanes", "Turbidity"]
 
 
-def load(path="water_potability.csv"):
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "dataSBP", "water_potability.csv")
+RESULTS = os.path.join(ROOT, "results")
+FIGURES = os.path.join(ROOT, "figures")
+
+
+def load(path=DATA):
     df = pd.read_csv(path)
     X = df[CRITERIA].copy()
     X = X.fillna(X.mean())          # column-mean imputation
